@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ALEX AI | Commercial Quote</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* BRAND SYSTEM */
+            --brand-blue: #009cff;
+            --brand-cyan: #00C2FF;
+            --brand-grad: linear-gradient(135deg, #009CFF 0%, #0061FF 100%);
+            --alex-dark: #0F172A;
+            --save-green: #10B981;
+            --border: #E2E8F0;
+            --alex-footer-grad: linear-gradient(135deg,#009cff 0%, #514690 100%);
+            --alex-purple: #514690;
+        }
+
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-print-color-adjust: exact; }
+        body { background: #64748B; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+
+        /* EDITOR */
+        #editor { 
+            width: 460px; background: white; border-right: 2px solid var(--alex-dark); 
+            padding: 25px; overflow-y: auto; z-index: 100; flex-shrink: 0;
+        }
+        .ui-card { background: #F8FAFC; border: 1px solid var(--border); padding: 18px; border-radius: 12px; margin-bottom: 15px; }
+        h4 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--brand-blue); font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        label { display: block; font-size: 9px; color: #64748B; font-weight: 700; margin: 8px 0 3px 0; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1.5px solid #CBD5E1; border-radius: 8px; font-size: 11px; margin-bottom: 5px; outline: none; }
+        input:focus { border-color: var(--brand-blue); box-shadow: 0 0 0 3px rgba(0,156,255,0.15); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .btn-add { width: 100%; padding: 10px; background: white; border: 1.5px dashed var(--brand-blue); color: var(--brand-blue); font-weight: 700; border-radius: 8px; cursor: pointer; font-size: 10px; margin-top: 5px; }
+        .btn-add:hover { background: #EFF6FF; }
+        .btn-print { width: 100%; padding: 16px; background: var(--alex-dark); color: white; border: none; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 20px; box-shadow: 0 10px 20px rgba(15,23,42,0.15); }
+        .save-indicator { font-size: 10px; color: var(--save-green); font-weight: 700; text-align: right; margin-bottom: 10px; opacity: 0; transition: opacity 0.5s; }
+
+        /* PREVIEW */
+        #preview { flex: 1; padding: 40px; background: #94A3B8; overflow-y: auto; display: flex; justify-content: center; }
+        .page { width: 210mm; background: white; padding: 0; box-shadow: 0 30px 80px rgba(0,0,0,0.3); position: relative; border-radius: 4px; }
+
+        /* LAYOUT */
+        .master-table { width: 100%; border-collapse: collapse; }
+        .header-spacer { height: 170px; }
+        .footer-spacer { height: 90px; }
+
+        .header-fixed { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 160px; 
+            padding: 10mm 12mm 0 12mm; background: white; 
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 4px solid var(--alex-dark);
+        }
+        .footer-fixed { 
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 85px; 
+            background: var(--alex-footer-grad); color: white; padding: 0 15mm;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        /* HEADER ELEMENTS */
+        .header-left { display: flex; align-items: center; gap: 20px; }
+        .logo-box { 
+            width: 85px; height: 85px; background: var(--brand-grad); border-radius: 18px; 
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,156,255,0.25); border: 3px solid white; flex-shrink: 0;
+        }
+        .logo-box i { font-size: 42px; color: white; }
+        .logo-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .agency-col { display: flex; flex-direction: column; justify-content: center; }
+        .agency-logo-img { height: 75px; width: auto; object-fit: contain; display: block; margin-bottom: 5px; } 
+        .agency-info { font-size: 10px; color: #64748B; line-height: 1.4; font-weight: 500; }
+        .placeholder-logo { font-size: 20px; font-weight: 900; color: #E2E8F0; text-transform: uppercase; }
+
+        .header-right { text-align: right; }
+        .quote-title { 
+            font-size: 36px; 
+            font-weight: 900; 
+            margin: 0; 
+            line-height: 1; 
+            letter-spacing: -1px;
+            background:var(--alex-footer-grad) ;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent; 
+        }
+        .quote-pill { 
+            background: var(--brand-grad); color: white; padding: 5px 15px; border-radius: 20px; 
+            font-size: 11px; font-weight: 700; display: inline-block; margin-top: 8px;
+        }
+
+        /* CONTENT */
+        .content-pad { padding: 0 12mm; }
+        .section-header { display: flex; align-items: center; gap: 10px; margin: 30px 0 15px 0; }
+        .sec-icon { 
+            width: 28px; height: 28px; background: #EFF6FF; color: var(--brand-blue); 
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px;
+        }
+        .sec-text { 
+            font-size: 12px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            background:var(--alex-footer-grad) ;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent; 
+        }
+        .sec-line { flex: 1; height: 2px; background: #F1F5F9; margin-left: 5px; }
+
+        /* PROFILE */
+        .profile-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #F8FAFC; border-left: 5px solid var(--brand-blue); border-radius: 0 12px 12px 0; 
+            padding: 20px 25px; margin-bottom: 20px;
+        }
+        .client-name { font-size: 22px; font-weight: 800; color: var(--alex-dark); line-height: 1.2; }
+        .client-addr { font-size: 11px; color: #64748B; margin-top: 2px; font-weight: 500; }
+        .d-tag { 
+            background: white; border: 1px solid #E2E8F0; padding: 6px 12px; border-radius: 20px; 
+            font-size: 10px; font-weight: 700; color: #475569; display: inline-flex; align-items: center; gap: 6px; margin-left: 5px;
+        }
+
+        /* GRIDS & CARDS */
+        .cov-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+        .cov-item { 
+            background: white; border: 1px solid var(--border); border-radius: 12px; padding: 12px; 
+            text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: center;
+        }
+        .cov-lbl { font-size: 7px; color: #94A3B8; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 5px; line-height: 1.2; }
+        .cov-val { font-size: 11px; font-weight: 800; color: var(--alex-dark); }
+
+        .veh-card { 
+            display: grid; grid-template-columns: 50px 1fr 350px; align-items: center; gap: 15px; 
+            background: white; border: 1.5px solid var(--border); border-radius: 16px; padding: 15px; 
+            margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); page-break-inside: avoid;
+        }
+        .v-icon { width: 50px; height: 50px; background: #F1F5F9; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 8px; overflow: hidden;}
+        .v-icon img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .v-info div { font-size: 13px; font-weight: 800; color: var(--alex-dark); }
+        .v-vin { font-family: monospace; font-size: 10px; color: var(--brand-blue); background: #EFF6FF; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+        
+        .v-specs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; text-align: center; border-left: 1px dashed var(--border); padding-left: 20px; }
+        .vs-lbl { font-size: 7px; color: #94A3B8; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 2px; }
+        .vs-val { font-size: 10px; font-weight: 800; color: var(--alex-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .market-stripe { 
+            display: grid; grid-template-columns: 110px 1fr 180px; border: 2px solid var(--border); 
+            border-radius: 20px; margin-bottom: 20px; overflow: hidden; background: white; 
+            position: relative; page-break-inside: avoid; transition: 0.2s;
+        }
+        .market-stripe.best { 
+            border-color: var(--brand-blue); 
+            box-shadow: 0 10px 30px rgba(0,156,255,0.1); 
+            background: linear-gradient(to right, #FFFFFF 60%, #F0F9FF 100%);
+        }
+        .ribbon { position: absolute; top:0; left:0; background: var(--brand-blue); color: white; padding: 5px 15px; border-bottom-right-radius: 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+
+        .ms-logo { background: #F8FAFC; display: flex; align-items: center; justify-content: center; padding: 15px; border-right: 1px dashed var(--border); }
+        .ms-logo img { max-width: 90px; max-height: 45px; object-fit: contain; }
+        
+        .ms-data { padding: 15px 25px; display: flex; flex-direction: column; justify-content: center; }
+        .ms-name { font-size: 14px; font-weight: 800; color: var(--brand-blue); text-transform: uppercase; margin-bottom: 2px; }
+        .ms-price { font-size: 34px; font-weight: 900; color: var(--alex-dark); line-height: 1; letter-spacing: -1px; }
+        .ms-sub { font-size: 11px; color: #64748B; font-weight: 600; margin-top: 5px; display: flex; gap: 15px; }
+        .ms-tags-container { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .tag { font-size: 9px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .tag.inc { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+        .tag.pot { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+
+        .ms-action { background: var(--alex-footer-grad); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px; text-align: center; }
+        .max-lbl { font-size: 8px; color: var(--brand-cyan); font-weight: 800; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 1px; }
+        .max-val { font-size: 30px; font-weight: 800; color: white; }
+
+        .insight-box { 
+            background: #EFF6FF; border: 1.5px solid #BAE6FD; border-radius: 16px; padding: 20px; 
+            margin-top: 30px; page-break-inside: avoid; position: relative;
+        }
+        .ai-chip { 
+            position: absolute; top: -12px; left: 20px; background: var(--brand-grad); color: white; 
+            padding: 4px 12px; border-radius: 20px; font-size: 9px; font-weight: 800; 
+            display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(0,156,255,0.2);
+        }
+
+        .footer-logo-img { height: 50px; object-fit: contain; margin-right: 15px; } /* Sin filtro, se muestra tal cual */
+        .footer-text { text-align: right; font-size: 9px; opacity: 0.9; font-weight: 500; letter-spacing: 0.5px; }
+
+        @media print {
+            body { height: auto; overflow: visible; background: white; }
+            #editor { display: none; }
+            #preview { padding: 0; background: white; display: block; }
+            .page { width: 100%; margin: 0; padding: 0; border: none; box-shadow: none; min-height: auto; }
+            .header-fixed { position: fixed; top: 0; z-index: 1000; }
+            .footer-fixed { position: fixed; bottom: 0; z-index: 1000; }
+            .veh-card, .market-stripe, .insight-box { break-inside: avoid; }
+        }
+/* Estilos para la pantalla de bloqueo */
+    #login-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0F172A; /* Fondo oscuro */
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .login-card {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        width: 380px; /* Un poco más ancho para el inglés */
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        border: 2px solid #009cff;
+    }
+
+    /* Estilo para tu nuevo logo */
+    .login-logo {
+        height: 60px; /* Ajusta este valor si el logo se ve muy grande o chico */
+        width: auto;
+        display: block;
+        margin: 0 auto 20px auto;
+        object-fit: contain;
+        
+        /* TRUCO: Si tu logo es blanco y el fondo es blanco, no se verá.
+           Si es un logo blanco transparente, descomenta la siguiente línea para darle un fondo oscuro al logo: */
+        /* background: #0F172A; padding: 10px; border-radius: 10px; */
+    }
+
+    .login-title {
+        font-size: 24px;
+        font-weight: 900;
+        color: #0F172A;
+        margin-bottom: 5px;
+    }
+
+    .login-sub {
+        font-size: 13px;
+        color: #64748B;
+        margin-bottom: 25px;
+    }
+
+    .login-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #E2E8F0;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    .login-input:focus {
+        border-color: #009cff;
+        box-shadow: 0 0 0 4px rgba(0, 156, 255, 0.1);
+    }
+
+    .btn-login {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #009CFF 0%, #0061FF 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-login:hover {
+        opacity: 0.9;
+    }
+
+    #error-msg {
+        color: #EF4444;
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 15px;
+        display: none;
+    }
+    </style>
+</head>
+<body>
+
+<div id="editor">
+    <div id="save-msg" class="save-indicator"><i class="fa-solid fa-check"></i> Changes Saved</div>
+    
+    <div class="ui-card">
+        <h4><i class="fa-solid fa-camera"></i> Branding Assets</h4>
+        <input type="file" onchange="loadImg(this, 'agency')">
+        <label>Agency Logo (Header)</label>
+        
+        <input type="file" onchange="loadImg(this, 'hero')">
+        <label>Hero Icon (Heart Box)</label>
+        
+        <input type="file" onchange="loadImg(this, 'footer')">
+        <label>Footer Logo (White/Transparent)</label>
+        
+        <label style="margin-top:10px">Agency Address</label>
+        <input id="in-addr" value="3101 N Central Ave ste 1174, Phoenix AZ, 85012" oninput="u()">
+    </div>
+
+    <div class="ui-card">
+        <h4><i class="fa-solid fa-user"></i> Client Information</h4>
+        <input id="in-client" value="Client Name" placeholder="Client Name" oninput="u()">
+        <input id="in-client-addr" value="Address" placeholder="Client Address" oninput="u()">
+        <div class="grid-2">
+            <input id="in-qid" value="Q-202X-001" placeholder="Quote ID" oninput="u()">
+            <input id="in-date" value="DATE" placeholder="Date" oninput="u()">
+        </div>
+        <label>Household Drivers (Comma Separated)</label>
+        <textarea id="in-drivers" rows="2" oninput="u()">Driver 1, Driver 2</textarea>
+    </div>
+
+    <div class="ui-card">
+        <h4><i class="fa-solid fa-shield-halved"></i> Global Coverages</h4>
+        <div class="grid-2">
+            <input id="in-bi" value="---" placeholder="Liability BI" oninput="u()">
+            <input id="in-pd" value="---" placeholder="Liability PD" oninput="u()">
+            <input id="in-uninsured" value="---" placeholder="Uninsured BI" oninput="u()">
+            <input id="in-underinsured" value="---" placeholder="Underinsured BI" oninput="u()">
+            <input id="in-med" value="---" placeholder="MedPay" oninput="u()">
+            <input id="in-acd" value="---" placeholder="AccDeath" oninput="u()">
+        </div>
+    </div>
+
+    <div id="ui-vehs"></div>
+    <button class="btn-add" onclick="addVeh()">+ ADD VEHICLE</button>
+    <br><br>
+
+    <div id="ui-carrs"></div>
+    <button class="btn-add" style="border-color:var(--alex-dark); color:var(--alex-dark)" onclick="addC()">+ ADD CARRIER</button>
+
+    <div class="ui-card" style="margin-top:20px">
+        <h4><i class="fa-solid fa-brain"></i> AI Strategic Insights</h4>
+        <textarea id="in-notes" rows="4" oninput="u()">Our analysis has identified the optimal coverage package for your profile.</textarea>
+    </div>
+
+    <button class="btn-print" onclick="window.print()">GENERATE PDF</button>
+</div>
+
+<div id="preview">
+    <div class="page">
+        <table class="master-table">
+            <thead>
+                <tr>
+                    <td>
+                        <div class="header-spacer"></div>
+                        <div class="header-fixed">
+                            <div class="header-left">
+                                <div class="logo-box" id="box-hero">
+                                    <i id="icon-hero" class="fa-solid fa-heart"></i>
+                                    <img id="img-hero" style="display:none; width:100%; height:100%; object-fit:cover;">
+                                </div>
+                                <div class="agency-col">
+                                    <div id="out-logo-container" style="height:75px; display:flex; align-items:center; margin-bottom:5px;">
+                                        <span class="placeholder-logo">AGENCY LOGO</span>
+                                    </div>
+                                    <div class="agency-info" id="out-addr"></div>
+                                    <div class="agency-info" style="font-weight:700">hello@alexai.cloud | (480) 630-9630</div>
+                                </div>
+                            </div>
+                            <div class="header-right">
+                                <h1 class="quote-title">Insurance Quote</h1>
+                                <div class="quote-pill" id="out-qid"></div>
+                                <div style="font-size:10px; font-weight:700; color:#94A3B8; margin-top:8px" id="out-date"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="content-pad">
+                        
+                        <div class="section-header">
+                            <div class="sec-icon"><i class="fa-solid fa-user"></i></div>
+                            <span class="sec-text">Client Profile</span>
+                            <div class="sec-line"></div>
+                        </div>
+                        <div class="profile-card">
+                            <div>
+                                <span class="client-lbl">PREPARED EXCLUSIVELY FOR</span>
+                                <div class="client-name" id="out-client"></div>
+                                <div class="client-addr" id="out-client-addr"></div>
+                            </div>
+                            <div style="text-align:right">
+                                <span class="client-lbl">AUTHORIZED DRIVERS</span>
+                                <div class="driver-tags" id="out-drivers" style="justify-content: flex-end; margin-top:5px"></div>
+                            </div>
+                        </div>
+
+                        <div class="section-header">
+                            <div class="sec-icon"><i class="fa-solid fa-layer-group"></i></div>
+                            <span class="sec-text">Protection Strategy</span>
+                            <div class="sec-line"></div>
+                        </div>
+                        <div class="cov-grid">
+                            <div class="cov-item"><span class="cov-lbl">Liability BI/PD</span><span class="cov-val" id="out-bi"></span></div>
+                            <div class="cov-item"><span class="cov-lbl">Uninsured BI</span><span class="cov-val" id="out-uninsured"></span></div>
+                            <div class="cov-item"><span class="cov-lbl">Underinsured BI</span><span class="cov-val" id="out-underinsured"></span></div>
+                            <div class="cov-item"><span class="cov-lbl">Medical Payments</span><span class="cov-val" id="out-med"></span></div>
+                            <div class="cov-item"><span class="cov-lbl">Accidental Death</span><span class="cov-val" id="out-acd"></span></div>
+                        </div>
+
+                        <div class="section-header">
+                            <div class="sec-icon"><i class="fa-solid fa-car"></i></div>
+                            <span class="sec-text">Insured Assets</span>
+                            <div class="sec-line"></div>
+                        </div>
+                        <div id="out-vehicles"></div>
+
+                        <div class="section-header">
+                            <div class="sec-icon"><i class="fa-solid fa-shop"></i></div>
+                            <span class="sec-text">Marketplace Analysis</span>
+                            <div class="sec-line"></div>
+                        </div>
+                        <div id="out-carriers"></div>
+
+                        <div class="insight-box">
+                            <div class="ai-chip"><i class="fa-solid fa-microchip"></i> ALEX AI INTELLIGENCE</div>
+                            <p id="out-notes" style="font-size:11px; line-height:1.6; color:#334155; margin:5px 0 0 0"></p>
+                        </div>
+
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>
+                        <div class="footer-spacer"></div>
+                        <div class="footer-fixed">
+                            <div style="display:flex; align-items:center">
+                                <div id="out-footer-logo-container"></div>
+                                <div style="font-weight:800; font-size:10px; text-transform:uppercase; letter-spacing:1px; color:white">Insurance for modern life</div>
+                            </div>
+                            <div class="footer-text">
+                                Powered by AI, Handled by Humans<br>
+                                ALL RIGHTS RESERVED 2026 • ALEXAI.CLOUD
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<script>
+    // DATA STORE
+    let d = {
+        agencyLogo: '', 
+        hero: '',
+        footerLogo: '', // Se guardará aquí el logo del footer
+        cars: [{name: '202X VEHICLE MODEL', vin: 'XXXX', comp: '$500', coll: '$500', road: 'Included', rent: '$40/Day', custom: 'No'}],
+        carriers: [{name: 'CARRIER NAME', logo: '', full: '$0,000.00', mo: '$000.00', down: '$000.00', inc: 'Bundle, Safe Driver', pot: 'Pay in Full', max: '$0,000', best: true}]
+    };
+
+    function saveState() {
+        try {
+            localStorage.setItem('alex_data_v2', JSON.stringify(d));
+            const inputs = {};
+            document.querySelectorAll('input:not([type="file"]), textarea').forEach(el => {
+                if(el.id) inputs[el.id] = el.value;
+            });
+            localStorage.setItem('alex_inputs_v2', JSON.stringify(inputs));
+            const ind = document.getElementById('save-msg');
+            ind.style.opacity = 1;
+            setTimeout(() => ind.style.opacity = 0, 1000);
+        } catch(e) { console.log("Storage limit", e); }
+    }
+
+    function loadState() {
+        try {
+            const data = localStorage.getItem('alex_data_v2');
+            if(data) d = JSON.parse(data);
+            const inputs = localStorage.getItem('alex_inputs_v2');
+            if(inputs) {
+                const vals = JSON.parse(inputs);
+                for (const [key, value] of Object.entries(vals)) {
+                    const el = document.getElementById(key);
+                    if(el) el.value = value;
+                }
+            }
+        } catch(e) { console.log("Load error", e); }
+    }
+
+    function u() {
+        gen();
+        saveState();
+    }
+
+    function setTxt(id, val) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    }
+
+    function addVeh() { 
+        d.cars.push({name: 'New Vehicle', vin: 'XXXX', comp: '$500', coll: '$500', road: 'No', rent: 'No', custom: 'No'}); 
+        rUI(); 
+        saveState();
+    }
+    
+    function addC() { 
+        d.carriers.push({name: 'Carrier Name', full: '$0', mo: '$0', down: '$0', inc: 'Discounts', pot: 'Potential', max: '$0', best: false}); 
+        rUI(); 
+        saveState();
+    }
+
+    function loadImg(input, type, idx = null) {
+        if (!input.files || !input.files[0]) return;
+        let r = new FileReader();
+        r.onload = e => {
+            // Lógica para guardar la imagen en el slot correcto
+            if(type==='agency') d.agencyLogo = e.target.result;
+            if(type==='hero') d.hero = e.target.result;
+            if(type==='footer') d.footerLogo = e.target.result; // Slot específico para footer
+            if(type==='vLogo') d.cars[idx].logo = e.target.result;
+            if(type==='cLogo') d.carriers[idx].logo = e.target.result;
+            u();
+        };
+        r.readAsDataURL(input.files[0]);
+    }
+
+    function rUI() {
+        const vehContainer = document.getElementById('ui-vehs');
+        if (vehContainer) {
+            vehContainer.innerHTML = d.cars.map((c,i) => `
+                <div class="ui-card">
+                    <input value="${c.name}" oninput="d.cars[${i}].name=this.value; u()" placeholder="Model Name">
+                    <div class="grid-2">
+                        <input value="${c.vin}" placeholder="VIN Last 4" oninput="d.cars[${i}].vin=this.value; u()">
+                        <input type="file" onchange="loadImg(this, 'vLogo', ${i})">
+                    </div>
+                    <div class="grid-3">
+                        <input value="${c.comp}" placeholder="Comp" oninput="d.cars[${i}].comp=this.value; u()">
+                        <input value="${c.coll}" placeholder="Coll" oninput="d.cars[${i}].coll=this.value; u()">
+                        <input value="${c.custom}" placeholder="Custom" oninput="d.cars[${i}].custom=this.value; u()">
+                    </div>
+                    <div class="grid-2">
+                        <input value="${c.road}" placeholder="Roadside" oninput="d.cars[${i}].road=this.value; u()">
+                        <input value="${c.rent}" placeholder="Rental" oninput="d.cars[${i}].rent=this.value; u()">
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const carrContainer = document.getElementById('ui-carrs');
+        if (carrContainer) {
+            carrContainer.innerHTML = d.carriers.map((c,i) => `
+                <div class="ui-card">
+                    <div style="display:flex; gap:5px"><input value="${c.name}" oninput="d.carriers[${i}].name=this.value; u()" placeholder="Carrier"><input type="file" onchange="loadImg(this, 'cLogo', ${i})"></div>
+                    <div class="grid-2"><input value="${c.full}" placeholder="Full Price" oninput="d.carriers[${i}].full=this.value; u()"><input value="${c.max}" placeholder="Max Savings" oninput="d.carriers[${i}].max=this.value; u()"></div>
+                    <div class="grid-3"><input value="${c.mo}" placeholder="Mo" oninput="d.carriers[${i}].mo=this.value; u()"><input value="${c.down}" placeholder="Down" oninput="d.carriers[${i}].down=this.value; u()"></div>
+                    
+                    <label style="color:#059669">Green Tags (Applied)</label>
+                    <input value="${c.inc}" placeholder="e.g. Bundle, Paperless" oninput="d.carriers[${i}].inc=this.value; u()">
+                    
+                    <label style="color:#F59E0B">Yellow Tags (Potential)</label>
+                    <input value="${c.pot}" placeholder="e.g. Paid in Full" oninput="d.carriers[${i}].pot=this.value; u()">
+                    
+                    <label><input type="checkbox" ${c.best?'checked':''} onchange="d.carriers[${i}].best=this.checked; u()"> Highlight Best Choice</label>
+                </div>
+            `).join('');
+        }
+        gen();
+    }
+
+    function gen() {
+        const logoHeader = document.getElementById('out-logo-container');
+        const logoFooter = document.getElementById('out-footer-logo-container');
+        
+        if(d.agencyLogo) {
+            logoHeader.innerHTML = `<img src="${d.agencyLogo}" class="agency-logo-img">`;
+        }
+        
+        if(d.hero) {
+            document.getElementById('icon-hero').style.display = 'none';
+            document.getElementById('img-hero').style.display = 'block';
+            document.getElementById('img-hero').src = d.hero;
+        }
+
+        // RENDERIZADO DEL LOGO FOOTER
+        if(d.footerLogo) {
+            logoFooter.innerHTML = `<img src="${d.footerLogo}" class="footer-logo-img">`;
+        } else {
+            logoFooter.innerHTML = ''; // Limpiar si no hay
+        }
+
+        ['addr','qid','date','client','client-addr','notes'].forEach(id => {
+            const input = document.getElementById('in-'+id);
+            if(input) setTxt('out-'+id, input.value);
+        });
+        
+        ['bi','pd','uninsured','underinsured','med','acd'].forEach(k => {
+            const input = document.getElementById('in-'+k);
+            if(input) setTxt('out-'+k, input.value);
+        });
+
+        const driversInput = document.getElementById('in-drivers');
+        const driversOut = document.getElementById('out-drivers');
+        if (driversInput && driversOut) {
+            driversOut.innerHTML = driversInput.value.split(',').map(x => 
+                x.trim() ? `<span class="d-tag"><i class="fa-solid fa-user"></i> ${x.trim()}</span>` : ''
+            ).join('');
+        }
+
+        const vehOut = document.getElementById('out-vehicles');
+        if (vehOut) {
+            vehOut.innerHTML = d.cars.map(v => `
+                <div class="veh-card">
+                    <div class="v-icon">
+                        ${v.logo ? `<img src="${v.logo}" style="width:100%;height:100%;object-fit:contain">` : '<i class="fa-solid fa-car" style="font-size:20px; color:#009CFF"></i>'}
+                    </div>
+                    <div class="v-info">
+                        <div>${v.name}</div>
+                        <span class="v-vin">VIN: ${v.vin}</span>
+                    </div>
+                    <div class="v-specs">
+                        <div><span class="vs-lbl">COMP</span><br><span class="vs-val">${v.comp}</span></div>
+                        <div><span class="vs-lbl">COLL</span><br><span class="vs-val">${v.coll}</span></div>
+                        <div><span class="vs-lbl">ROAD</span><br><span class="vs-val">${v.road}</span></div>
+                        <div><span class="vs-lbl">RENT</span><br><span class="vs-val">${v.rent}</span></div>
+                        <div><span class="vs-lbl">CUSTOM</span><br><span class="vs-val">${v.custom}</span></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        const carrOut = document.getElementById('out-carriers');
+        if (carrOut) {
+            carrOut.innerHTML = d.carriers.map(c => {
+                const renderTags = (str, cls) => {
+                    if(!str) return '';
+                    return str.split(',').map(t => t.trim() ? `<span class="tag ${cls}"><i class="fa-solid ${cls=='inc'?'fa-check':'fa-info-circle'}"></i> ${t.trim()}</span>` : '').join('');
+                };
+
+                return `
+                <div class="market-stripe ${c.best?'best':''}">
+                    ${c.best?'<div class="ribbon">TOP CHOICE</div>':''}
+                    <div class="ms-logo">
+                        ${c.logo ? `<img src="${c.logo}" style="width:100%;height:100%;object-fit:contain">` : '<span style="font-weight:900;color:#CBD5E1;font-size:10px">LOGO</span>'}
+                    </div>
+                    <div class="ms-data">
+                        <div class="ms-name">${c.name}</div>
+                        <div class="ms-price">${c.full}</div>
+                        <div class="ms-sub"><span>Mo: ${c.mo}</span><span>Down: ${c.down}</span></div>
+                        <div class="ms-tags-container">
+                            ${renderTags(c.inc, 'inc')}
+                            ${renderTags(c.pot, 'pot')}
+                        </div>
+                    </div>
+                    <div class="ms-action">
+                        <div class="max-lbl">MAX SAVINGS</div>
+                        <div class="max-val">${c.max}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    loadState();
+    const dField = document.getElementById('in-date');
+    if(dField && !dField.value) dField.value = new Date().toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'}).toUpperCase();
+    
+    rUI();
+</script>
+
+<script>
+    // ==========================================
+    // PEGA AQUÍ LA URL QUE COPIASTE DE GOOGLE:
+    const API_URL = "https://script.google.com/macros/s/AKfycbyyN02owaETwCu_Fsc_AvHZFphzXQ6qzayEKHlCoerT49GZgiZg_ymjhQL9-x2g-1bv/exec"; 
+    // ==========================================
+
+    function checkLogin() {
+        const u = document.getElementById('usr-val').value.trim();
+        const p = document.getElementById('pwd-val').value.trim();
+        const error = document.getElementById('error-msg');
+        const btn = document.querySelector('.btn-login');
+        const overlay = document.getElementById('login-overlay');
+
+        if(!u || !p) return;
+
+        // 1. Estado de carga visual
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verificando...';
+        btn.disabled = true;
+        error.style.display = "none";
+
+        // 2. Consultar a Google Sheets
+        fetch(API_URL + "?u=" + encodeURIComponent(u) + "&p=" + encodeURIComponent(p))
+        .then(response => response.text())
+        .then(data => {
+            if(data.trim() === "APROBADO") {
+                // ÉXITO
+                overlay.style.transition = "opacity 0.5s";
+                overlay.style.opacity = "0";
+                setTimeout(() => { overlay.style.display = "none"; }, 500);
+            } else {
+                // ERROR
+                throw new Error("Credenciales incorrectas");
+            }
+        })
+        .catch(err => {
+            // Manejo de error visual
+            btn.innerHTML = 'ACCEDER AL SISTEMA';
+            btn.disabled = false;
+            error.innerText = "Usuario o contraseña incorrectos";
+            error.style.display = "block";
+            
+            // Animación de error
+            document.querySelector('.login-card').animate([
+                { transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, 
+                { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }
+            ], { duration: 300 });
+        });
+    }
+
+    document.getElementById('pwd-val').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkLogin();
+    });
+</script>
+
+<div id="login-overlay">
+    <div class="login-card">
+        <img src="./assets/logo-alex-heart.png" class="login-logo" alt="Alex AI Logo">
+        
+        <div class="login-title">ALEX AI SECURE</div>
+        <div class="login-sub">Please enter your credentials to access</div>
+        
+        <input type="text" id="usr-val" class="login-input" placeholder="Username">
+        <input type="password" id="pwd-val" class="login-input" placeholder="Password">
+        
+        <button class="btn-login" onclick="checkLogin()">Login System</button>
+        <div id="error-msg"><i class="fa-solid fa-triangle-exclamation"></i> Access Denied</div>
+    </div>
+</div>
+
+</body>
+</html>
