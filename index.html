@@ -289,6 +289,23 @@
         margin-top: 15px;
         display: none;
     }
+
+        .btn-delete { 
+            width: 100%; 
+            padding: 8px; 
+            background: #FEE2E2; 
+            color: #EF4444; 
+            border: 1px dashed #EF4444; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 9px; 
+            font-weight: 800; 
+            margin-top: 10px; 
+            text-transform: uppercase;
+        }
+        .btn-delete:hover { 
+            background: #FECACA; 
+        }
     </style>
 </head>
 <body>
@@ -518,6 +535,24 @@
         saveState();
     }
 
+function removeVeh(index) {
+        // La alerta de confirmación
+        if (confirm("¿Estás seguro de que deseas eliminar este vehículo? Todos sus datos se perderán.")) {
+            d.cars.splice(index, 1); // Elimina el auto si el usuario acepta
+            rUI(); // Recarga la interfaz
+            saveState(); // Guarda los cambios
+        }
+    }
+
+    function removeC(index) {
+        // La alerta de confirmación
+        if (confirm("¿Estás seguro de que deseas eliminar este carrier? Esta acción no se puede deshacer.")) {
+            d.carriers.splice(index, 1); // Elimina el carrier si el usuario acepta
+            rUI(); // Recarga la interfaz
+            saveState(); // Guarda los cambios
+        }
+    }
+
     function loadImg(input, type, idx = null) {
         if (!input.files || !input.files[0]) return;
         let r = new FileReader();
@@ -552,6 +587,7 @@
                         <input value="${c.road}" placeholder="Roadside" oninput="d.cars[${i}].road=this.value; u()">
                         <input value="${c.rent}" placeholder="Rental" oninput="d.cars[${i}].rent=this.value; u()">
                     </div>
+                    <button class="btn-delete" onclick="removeVeh(${i})"><i class="fa-solid fa-trash"></i> Eliminar Vehículo</button>
                 </div>
             `).join('');
         }
@@ -571,6 +607,7 @@
                     <input value="${c.pot}" placeholder="e.g. Paid in Full" oninput="d.carriers[${i}].pot=this.value; u()">
                     
                     <label><input type="checkbox" ${c.best?'checked':''} onchange="d.carriers[${i}].best=this.checked; u()"> Highlight Best Choice</label>
+                    <button class="btn-delete" onclick="removeC(${i})"><i class="fa-solid fa-trash"></i> Eliminar Carrier</button>
                 </div>
             `).join('');
         }
@@ -747,4 +784,5 @@
 </div>
 
 </body>
+
 </html>
